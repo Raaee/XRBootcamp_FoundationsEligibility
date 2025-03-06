@@ -25,14 +25,14 @@ public class TicTacToeAI : MonoBehaviour
 	[SerializeField] private Messages messager;
 	[SerializeField] private GameObject _xPrefab;
 	[SerializeField] private GameObject _oPrefab;
-	[SerializeField] private TicTacToeIcon playerIcon = TicTacToeIcon.cross;
-
-	private TicTacToeIcon aiIcon = TicTacToeIcon.circle;
+	[field:SerializeField] public TicTacToeIcon playerIcon {get; private set;}= TicTacToeIcon.circle;
+	public TicTacToeIcon AiIcon {get; private set;} = TicTacToeIcon.cross;
 	private Turn currentTurn = Turn.Player;
 	public bool SpotSelected {get; set;} = false;
 	public bool GameWon  {get; set;} = false;
 	[SerializeField] private GameObject retryButton;
 	public List<AIAlgorithm> aiDifficulties;
+	private AIAlgorithm currentAiDifficulty;
 	
 	[Header("EVENTS")]
 	[HideInInspector] public UnityEvent OnAiTurn;
@@ -40,10 +40,8 @@ public class TicTacToeAI : MonoBehaviour
 	[HideInInspector] public UnityEvent OnGameEnd;
 	public UnityEvent onGameStarted;
 
-	private AIAlgorithm currentAiDifficulty;
-
     private void Start() {
-		aiIcon = playerIcon == TicTacToeIcon.cross ? TicTacToeIcon.circle : TicTacToeIcon.cross; // makes the ai use the opposite of the player icon
+		AiIcon = playerIcon == TicTacToeIcon.cross ? TicTacToeIcon.circle : TicTacToeIcon.cross; // makes the ai use the opposite of the player icon
     }
 	private void Update() {
 		messager.ShowCurrentTurn(currentTurn);
@@ -73,8 +71,8 @@ public class TicTacToeAI : MonoBehaviour
 		SpotSelected = true;
 	}
 	public void AiSelects(int coordX, int coordY){
-		SetVisual(coordX, coordY, aiIcon);
-		currentAiDifficulty.AiSelectedSpaces[coordX, coordY] = aiIcon;
+		SetVisual(coordX, coordY, AiIcon);
+		currentAiDifficulty.AiSelectedSpaces[coordX, coordY] = AiIcon;
 	}
 	// Mini Turn State Machine:
 	private IEnumerator TurnLoop() {
@@ -110,7 +108,7 @@ public class TicTacToeAI : MonoBehaviour
 				GameWon = true;
 				return 0;
 			}
-			if (boardState[x, 0] == aiIcon && boardState[x, 1] == aiIcon && boardState[x, 2] == aiIcon) {
+			if (boardState[x, 0] == AiIcon && boardState[x, 1] == AiIcon && boardState[x, 2] == AiIcon) {
 				GameWon = true;
 				return 1;
 			}
@@ -119,7 +117,7 @@ public class TicTacToeAI : MonoBehaviour
 				GameWon = true;
 				return 0;
 			}
-			if (boardState[0, x] == aiIcon && boardState[1, x] == aiIcon && boardState[2, x] == aiIcon) {
+			if (boardState[0, x] == AiIcon && boardState[1, x] == AiIcon && boardState[2, x] == AiIcon) {
 				GameWon = true;
 				return 1;
 			}			
@@ -132,7 +130,7 @@ public class TicTacToeAI : MonoBehaviour
 			GameWon = true;
 			return 0;
 		}
-		if (boardState[0, 0] == aiIcon && boardState[1, 1] == aiIcon && boardState[2, 2] == aiIcon) {
+		if (boardState[0, 0] == AiIcon && boardState[1, 1] == AiIcon && boardState[2, 2] == AiIcon) {
 			GameWon = true;
 			return 1;
 		}
@@ -140,7 +138,7 @@ public class TicTacToeAI : MonoBehaviour
 			GameWon = true;
 			return 0;
 		}
-		if (boardState[0, 2] == aiIcon && boardState[1, 1] == aiIcon && boardState[2, 0] == aiIcon) {
+		if (boardState[0, 2] == AiIcon && boardState[1, 1] == AiIcon && boardState[2, 0] == AiIcon) {
 			GameWon = true;
 			return 1;
 		}

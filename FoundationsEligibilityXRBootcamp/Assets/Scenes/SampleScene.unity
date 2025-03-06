@@ -3042,7 +3042,7 @@ MonoBehaviour:
     type: 3}
   _oPrefab: {fileID: 7864686030223180920, guid: f4dc0bc95f6576a40a4d10ac0b905c6a,
     type: 3}
-  playerIcon: 2
+  <playerIcon>k__BackingField: 2
   retryButton: {fileID: 1282022450}
   aiDifficulties:
   - {fileID: 1474195461}
