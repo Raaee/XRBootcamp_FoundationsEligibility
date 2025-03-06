@@ -4,35 +4,26 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-public enum TicTacToeState{none, cross, circle}
+public enum TicTacToeIcon{none, cross, circle}
 
 [System.Serializable]
 public class WinnerEvent : UnityEvent<int>
 {
 }
-
+/// <summary>
+/// Foundations Eligibility Test for XR Bootcamp
+/// March 5, 2025 | Raeus Aranguren-Viegas
+/// </summary>
 public class TicTacToeAI : MonoBehaviour
 {
-
 	int _aiLevel;
-
-	TicTacToeState[,] boardState;
-
-	[SerializeField]
-	private bool _isPlayerTurn;
-
-	[SerializeField]
-	private int _gridSize = 3;
-	
-	[SerializeField]
-	private TicTacToeState playerState = TicTacToeState.cross;
-	TicTacToeState aiState = TicTacToeState.circle;
-
-	[SerializeField]
-	private GameObject _xPrefab;
-
-	[SerializeField]
-	private GameObject _oPrefab;
+	TicTacToeIcon[,] boardState;
+	[SerializeField] private bool _isPlayerTurn;
+	[SerializeField] private int _gridSize = 3;
+	[SerializeField] private GameObject _xPrefab;
+	[SerializeField] private GameObject _oPrefab;
+	[SerializeField] private TicTacToeIcon playerState = TicTacToeIcon.cross;
+	private TicTacToeIcon aiState = TicTacToeIcon.circle;
 
 	public UnityEvent onGameStarted;
 
@@ -53,11 +44,6 @@ public class TicTacToeAI : MonoBehaviour
 		StartGame();
 	}
 
-	public void RegisterTransform(int myCoordX, int myCoordY, ClickTrigger clickTrigger)
-	{
-		_triggers[myCoordX, myCoordY] = clickTrigger;
-	}
-
 	private void StartGame()
 	{
 		_triggers = new ClickTrigger[3,3];
@@ -65,19 +51,18 @@ public class TicTacToeAI : MonoBehaviour
 	}
 
 	public void PlayerSelects(int coordX, int coordY){
-
 		SetVisual(coordX, coordY, playerState);
 	}
-
 	public void AiSelects(int coordX, int coordY){
-
 		SetVisual(coordX, coordY, aiState);
 	}
-
-	private void SetVisual(int coordX, int coordY, TicTacToeState targetState)
+	public void RegisterTransform(int myCoordX, int myCoordY, ClickTrigger clickTrigger) {
+		_triggers[myCoordX, myCoordY] = clickTrigger;
+	}
+	private void SetVisual(int coordX, int coordY, TicTacToeIcon targetState)
 	{
 		Instantiate(
-			targetState == TicTacToeState.circle ? _oPrefab : _xPrefab,
+			targetState == TicTacToeIcon.circle ? _oPrefab : _xPrefab,
 			_triggers[coordX, coordY].transform.position,
 			Quaternion.identity
 		);
