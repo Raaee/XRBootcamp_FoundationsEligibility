@@ -11,7 +11,6 @@ public class RetryButton : MonoBehaviour
 	{
 		GetComponent<Button>().onClick.AddListener(Retry);
 	}
-
 	public void Retry(){
 		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 	}
