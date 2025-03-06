@@ -3,10 +3,8 @@ using UnityEngine;
 
 public class GamePiece : MonoBehaviour{
 
-	[SerializeField]
-	private float _animTime = 2f;
-	[SerializeField]
-	AnimationCurve _growthCurve;
+	[SerializeField] private float _animTime = 2f;
+	[SerializeField] private AnimationCurve _growthCurve;
 
 	private void OnEnable()
 	{
