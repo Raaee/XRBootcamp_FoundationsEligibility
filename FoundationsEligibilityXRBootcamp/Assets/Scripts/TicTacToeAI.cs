@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -19,28 +20,28 @@ public enum Turn{none, Player, Machine }
 public class TicTacToeAI : MonoBehaviour
 {
 	private int _aiLevel; // 0 = easy | 1 = hard
-	TicTacToeIcon[,] boardState;
-	[SerializeField] private EndMessage messager;
+	public TicTacToeIcon[,] boardState {get; private set;}
+	private ClickTrigger[,] _triggers;
+	[SerializeField] private Messages messager;
 	[SerializeField] private GameObject _xPrefab;
 	[SerializeField] private GameObject _oPrefab;
 	[SerializeField] private TicTacToeIcon playerIcon = TicTacToeIcon.cross;
 
 	private TicTacToeIcon aiIcon = TicTacToeIcon.circle;
 	private Turn currentTurn = Turn.Player;
-	private bool spotSelected = false;
-	private bool gameWon = false;
-	public UnityEvent onGameStarted;
+	public bool SpotSelected {get; set;} = false;
+	public bool GameWon  {get; set;} = false;
+	[SerializeField] private GameObject retryButton;
+	public List<AIAlgorithm> aiDifficulties;
+	
+	[Header("EVENTS")]
 	[HideInInspector] public UnityEvent OnAiTurn;
 	[HideInInspector] public UnityEvent OnPlayerTurn;
-	[SerializeField] private GameObject retryButton;
+	[HideInInspector] public UnityEvent OnGameEnd;
+	public UnityEvent onGameStarted;
 
-	public UnityEvent OnGameEnd;
+	private AIAlgorithm currentAiDifficulty;
 
-	private ClickTrigger[,] _triggers;
-	
-	private void Awake()
-	{
-	}
     private void Start() {
 		aiIcon = playerIcon == TicTacToeIcon.cross ? TicTacToeIcon.circle : TicTacToeIcon.cross; // makes the ai use the opposite of the player icon
     }
@@ -49,6 +50,7 @@ public class TicTacToeAI : MonoBehaviour
 	}
 	public void StartAI(int AILevel){
 		_aiLevel = AILevel;
+		currentAiDifficulty = _aiLevel == 0 ? aiDifficulties[0] : aiDifficulties[1];
 		retryButton.SetActive(false);
 		StartGame();
 	}
@@ -56,7 +58,7 @@ public class TicTacToeAI : MonoBehaviour
 	{
 		_triggers = new ClickTrigger[3,3]; // init triggers 2D array
 		boardState = new TicTacToeIcon[3,3]; // init boardState 2D array
-		gameWon = false;
+		GameWon = false;
 		currentTurn = Turn.Player;
 		onGameStarted.Invoke();
 		StartCoroutine(TurnLoop());
@@ -67,30 +69,32 @@ public class TicTacToeAI : MonoBehaviour
 	}
 	public void PlayerSelects(int coordX, int coordY) {
 		SetVisual(coordX, coordY, playerIcon);
-		spotSelected = true;
+		currentAiDifficulty.PlayerLastSelectedSpace = new Vector2Int(coordX, coordY);
+		SpotSelected = true;
 	}
-	private void AiSelects(int coordX, int coordY){
+	public void AiSelects(int coordX, int coordY){
 		SetVisual(coordX, coordY, aiIcon);
+		currentAiDifficulty.AiSelectedSpaces[coordX, coordY] = aiIcon;
 	}
 	// Mini Turn State Machine:
 	private IEnumerator TurnLoop() {
 		int winner = -2;
-		while (!gameWon) {
+		while (!GameWon) {
 			currentTurn = Turn.Player;
-			spotSelected = false;
+			SpotSelected = false;
 			OnPlayerTurn.Invoke(); // enables player input
-			yield return new WaitUntil(SpotSelected);
+			yield return new WaitUntil(CheckSpotSelected);
 			winner = CheckWinner();
 
 			OnAiTurn.Invoke(); // disables player input
 			yield return new WaitForSeconds(1f); // delay for visual purposes
-			if (gameWon) break; // early return if game is won ; stops loop
+			if (GameWon) break; // early return if game is won ; stops loop
 
 			currentTurn = Turn.Machine;
 			yield return new WaitForSeconds(0.5f); 
 			StartAI();
 
-			yield return new WaitUntil(SpotSelected);
+			yield return new WaitUntil(CheckSpotSelected);
 			yield return new WaitForSeconds(0.5f);
 
 			winner = CheckWinner();
@@ -99,24 +103,24 @@ public class TicTacToeAI : MonoBehaviour
 		messager.OnGameEnded(winner);
 		retryButton.SetActive(true);
 	}
-	private int CheckWinner() {
+	public int CheckWinner() {
 		for (int x = 0; x < boardState.GetLength(0); x++) {
 			// all rows
 			if (boardState[x, 0] == playerIcon && boardState[x, 1] == playerIcon && boardState[x, 2] == playerIcon) {
-				gameWon = true;
+				GameWon = true;
 				return 0;
 			}
 			if (boardState[x, 0] == aiIcon && boardState[x, 1] == aiIcon && boardState[x, 2] == aiIcon) {
-				gameWon = true;
+				GameWon = true;
 				return 1;
 			}
 			// all columns
 			if (boardState[0, x] == playerIcon && boardState[1, x] == playerIcon && boardState[2, x] == playerIcon) {
-				gameWon = true;
+				GameWon = true;
 				return 0;
 			}
 			if (boardState[0, x] == aiIcon && boardState[1, x] == aiIcon && boardState[2, x] == aiIcon) {
-				gameWon = true;
+				GameWon = true;
 				return 1;
 			}			
 		}
@@ -125,70 +129,30 @@ public class TicTacToeAI : MonoBehaviour
     }
 	private int CheckDiagonals() {
 		if (boardState[0, 0] == playerIcon && boardState[1, 1] == playerIcon && boardState[2, 2] == playerIcon) {
-			gameWon = true;
+			GameWon = true;
 			return 0;
 		}
 		if (boardState[0, 0] == aiIcon && boardState[1, 1] == aiIcon && boardState[2, 2] == aiIcon) {
-			gameWon = true;
+			GameWon = true;
 			return 1;
 		}
 		if (boardState[0, 2] == playerIcon && boardState[1, 1] == playerIcon && boardState[2, 0] == playerIcon) {
-			gameWon = true;
+			GameWon = true;
 			return 0;
 		}
 		if (boardState[0, 2] == aiIcon && boardState[1, 1] == aiIcon && boardState[2, 0] == aiIcon) {
-			gameWon = true;
+			GameWon = true;
 			return 1;
 		}
 		return -1;
 	}
 	private void StartAI() {
-		spotSelected = false;
-
-		switch (_aiLevel) {
-			case 0:
-				EasyAI();
-				break;
-			case 1:
-				HardAI();
-				break;
-		}
+		SpotSelected = false;
+		currentAiDifficulty.StartAI();
     }
-	private bool SpotSelected() {
-		return spotSelected == true;
+	private bool CheckSpotSelected() {
+		return SpotSelected == true;
     }
-	/*
-	 *  Easy AI Algorithm: Random Selection
-	 * - create a list of available coords based on empty board spaces
-	 * - selects a random coord based on the available list
-	 */
-	private void EasyAI() {
-		List<Vector2Int> availableSpaces = new List<Vector2Int>();
-		for (int x = 0; x < _triggers.GetLength(0); x++) {
-			for (int y = 0; y < _triggers.GetLength(1); y++) {
-				if (boardState[x, y] == TicTacToeIcon.none) {
-					availableSpaces.Add(new Vector2Int(x, y));
-                }
-			}
-		}
-		if (availableSpaces.Count > 0) {
-			Vector2Int randomPos = availableSpaces[UnityEngine.Random.Range(0, availableSpaces.Count)];
-			AiSelects(randomPos.x, randomPos.y);
-			spotSelected = true;	
-		}
-		if (availableSpaces.Count <= 0) {
-			gameWon = true;
-			spotSelected = true;
-        }
-	}
-	/*
-	 * Hard AI Algorithm: First Best Choice
-	 * - explain steps
-	 *  
-	 */
-	private void HardAI() {
-		spotSelected = true;
-	}
 	private void SetVisual(int coordX, int coordY, TicTacToeIcon targetIcon)
 	{
 		Instantiate(
@@ -197,6 +161,7 @@ public class TicTacToeAI : MonoBehaviour
 			Quaternion.identity
 		);
 		SetBoardState(coordX, coordY, targetIcon);
+		messager.UpdateMiniBoard(boardState);
 	}
 	private void SetBoardState(int coordX, int coordY, TicTacToeIcon targetIcon) {
 		boardState[coordX, coordY] = targetIcon;

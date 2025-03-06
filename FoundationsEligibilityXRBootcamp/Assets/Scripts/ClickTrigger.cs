@@ -6,7 +6,7 @@ using UnityEngine;
 public class ClickTrigger : MonoBehaviour
 {
 	TicTacToeAI _ai;
-	public EndMessage messager { get; set; }
+	public Messages messager { get; set; }
 	[SerializeField] private int _myCoordX = 0;
 	[SerializeField] private int _myCoordY = 0;
 	[field: SerializeField] public bool canClick { get; set; }
