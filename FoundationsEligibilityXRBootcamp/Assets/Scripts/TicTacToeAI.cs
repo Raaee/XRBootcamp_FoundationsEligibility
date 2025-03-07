@@ -15,7 +15,7 @@ public enum Turn{none, Player, Machine }
 ///  
 /// Tic Tac Toe AI:
 /// - Easy AI will check the available spaces on the board and select a random spot from those spaces.
-/// - Hard AI will
+/// - Hard AI will check best first space based on already taken spots, while blocking player moves accordingly.
 /// </summary>
 public class TicTacToeAI : MonoBehaviour
 {

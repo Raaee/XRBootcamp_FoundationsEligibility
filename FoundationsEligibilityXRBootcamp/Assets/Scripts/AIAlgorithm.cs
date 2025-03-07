@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+/// <summary>
+/// Abstract class for each AI algorithm
+/// </summary>
 public abstract class AIAlgorithm : MonoBehaviour
 {
     protected TicTacToeAI ticTacToeAI;
