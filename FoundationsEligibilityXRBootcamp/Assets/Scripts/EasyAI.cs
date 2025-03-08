@@ -18,7 +18,7 @@ public class EasyAI : AIAlgorithm
 			ticTacToeAI.SpotSelected = true;	
 		}
 		if (availableSpaces.Count <= 0) {
-			ticTacToeAI.GameWon = true;
+			ticTacToeAI.GameComplete = true;
 			ticTacToeAI.SpotSelected = true;
         }
 	}
