@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 /// <summary>
 /// This was the EndMessage class. Renamed to properly fit its purpose.
+/// This script handles all message changes to the text within the game. For visual feedback purposes.
 /// </summary>
 public class Messages : MonoBehaviour
 {
@@ -27,14 +28,13 @@ public class Messages : MonoBehaviour
     }
     public void OnGameEnded(int winner)
 	{
-		//_playerMessage.text = winner == -1 ? "Tie" : winner == 1 ? "AI wins" : "Player wins";
 		if (winner == -1) {
 			ShowMessage("Tie", tieColor);
 			miniBoard.color = tieColor;
         } else if (winner == 1) {
 			ShowMessage("Machine Wins", loseColor);
 			miniBoard.color = loseColor;
-        } else if (winner == -2) {
+        } else if (winner == -2) { // for debug
 			ShowMessage("No Win", normalColor);
 			miniBoard.color = normalColor;
 		}

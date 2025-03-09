@@ -5,8 +5,8 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 using UnityEngine.Events;
 
-public enum TicTacToeIcon{none, cross, circle}
-public enum Turn{none, Player, Machine }
+public enum TicTacToeIcon{none, cross, circle} // refactored to properly tell its purpose
+public enum Turn{none, Player, Machine } // used for turn state machine
 
 /// <summary>
 /// Foundations Eligibility Test for XR Bootcamp
@@ -16,6 +16,14 @@ public enum Turn{none, Player, Machine }
 /// Tic Tac Toe AI:
 /// - Easy AI will check the available spaces on the board and select a random spot from those spaces.
 /// - Hard AI will check best first space based on already taken spots, while blocking player moves accordingly.
+/// 
+/// Notes:
+/// I removed some stuff originally present from this script because I did not use them.
+/// I also separated the AI logic from this script so it wouldnt reach a million lines.....
+
+/// I also added some QoL feedback visuals to the game which show the current turns, a warning message if you select a taken spot,
+///		and changes the color of the text based on the win conditions.
+///	This is all done within the Messages script which was originally the 'EndMessage' script.
 /// </summary>
 public class TicTacToeAI : MonoBehaviour
 {
@@ -32,7 +40,7 @@ public class TicTacToeAI : MonoBehaviour
 	private Turn currentTurn = Turn.Player;
 	public bool SpotSelected {get; set;} = false;
 	public bool GameComplete  {get; set;} = false;
-	public List<AIAlgorithm> aiDifficulties;
+	public List<AIAlgorithm> aiDifficulties; // list of all ai algorithms
 	private AIAlgorithm currentAiDifficulty;
 	
 	[HideInInspector] public UnityEvent OnAiTurn; // to disable player input on ai turn
@@ -47,8 +55,7 @@ public class TicTacToeAI : MonoBehaviour
 		messager.ShowCurrentTurn(currentTurn);
 	}
 	public void StartAI(int AILevel){
-		_aiLevel = AILevel;
-		currentAiDifficulty = _aiLevel == 0 ? aiDifficulties[0] : aiDifficulties[1]; // selects an AI algorithm based on the selected AI Level
+		currentAiDifficulty = AILevel == 0 ? aiDifficulties[0] : aiDifficulties[1]; // selects an AI algorithm based on the selected AI Level
 		retryButton.SetActive(false);
 		StartGame();
 	}
@@ -57,7 +64,6 @@ public class TicTacToeAI : MonoBehaviour
 		_triggers = new ClickTrigger[3,3]; // init triggers 2D array
 		boardState = new TicTacToeIcon[3,3]; // init boardState 2D array
 		GameComplete = false;
-		currentTurn = Turn.Player;
 		onGameStarted.Invoke();
 		StartCoroutine(TurnLoop()); // state machine loop
 	}
@@ -80,6 +86,7 @@ public class TicTacToeAI : MonoBehaviour
 		while (!GameComplete) {
 			currentTurn = Turn.Player;
 			SpotSelected = false;
+
 			OnPlayerTurn.Invoke(); // enables player input
 			yield return new WaitUntil(CheckSpotSelected);
 			winner = CheckWinner();

@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 /// <summary>
-/// Abstract class for each AI algorithm
+///		Abstract class for each AI algorithm.
+/// This class holds the general functions both AI difficulties use and also acts as the identifier for the TicTacToeAI difficultyAI
 /// </summary>
 public abstract class AIAlgorithm : MonoBehaviour
 {

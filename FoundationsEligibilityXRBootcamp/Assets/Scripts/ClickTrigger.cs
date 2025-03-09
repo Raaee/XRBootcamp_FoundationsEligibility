@@ -39,7 +39,7 @@ public class ClickTrigger : MonoBehaviour
 
 	private void OnMouseDown()
 	{
-		if (aiTurn) return;
+		if (aiTurn) return; // prevents the player from selecting a space during ai turn
 		if(!canClick){
 			messager?.ShowSpotTakenMessage();
 			return;

@@ -10,11 +10,19 @@ using UnityEngine;
    /// - it then checks if there is a possible win position
    /// - if there is not, it will check if there is a possible block position
    /// - if there is not, it will select a random point from the available spaces
+   /// It does this by checking each row/column/diagonal from each space that has already been taken.
+   /// 
+   /// Notes:
+   /// I am aware this code is complicated. But I really wanted to challenge myself in making an algorithm that does NOT 
+   ///		loop through the entire board every single time it wants to check for a possible space to place a pawn (unless the board is full ig).
+   /// There are definitely improvements to be made AND it does sometimes mess up. But the system works to the best of its abilities.
    /// </summary>
 public class HardAI : AIAlgorithm
 {
 	private	List<Vector2Int> aiSpacesTaken = new List<Vector2Int>();
-	private Vector2Int bestMove = -Vector2Int.one;
+	private Vector2Int bestHorizontal = -Vector2Int.one;
+	private Vector2Int bestVertical = -Vector2Int.one;
+	private Vector2Int bestDiagonal = -Vector2Int.one;
 	public List<Vector2Int> playerSpacesTaken {get; set;} = new List<Vector2Int>();
 	  
     public override void StartAI() {
@@ -34,25 +42,16 @@ public class HardAI : AIAlgorithm
 			return;
 		}
 		nextPossible = CheckPossibleWins(); // CHECK WIN
-//		nextPossible = CheckForPossibleBlock();
 		
 		if (nextPossible == -Vector2Int.one) { // BLOCK PLAYER
-			Debug.Log("win with: " + nextPossible);
-			/// current issue: this block is never called bc its never at nothing
+			nextPossible = CheckForPossibleBlock();
 		}
-
-
-		/*if (availableSpaces.Contains(Vector2Int.one)) { // middle
-			nextPossible = Vector2Int.one;
-			FinalSelect(nextPossible.x, nextPossible.y);
-			return;
-		}*/
 		
 		if (nextPossible == -Vector2Int.one) { // if no space found
 			nextPossible = GetRandomSpace(availableSpaces);
-			Debug.Log("random");
 		}
-		FinalSelect(nextPossible.x, nextPossible.y);		
+
+		FinalSelect(nextPossible.x, nextPossible.y);
 	}
 	private void FinalSelect(int x, int y) {
 		aiSpacesTaken.Add(new Vector2Int(x,y));
@@ -60,64 +59,61 @@ public class HardAI : AIAlgorithm
 		ticTacToeAI.SpotSelected = true;
 	}
 	/**
-	* check all possible solutions from each space thats already taken
+	* checks all possible solutions from each space thats already taken
 	* returns the first best solution
 	**/
-	private Vector2Int CheckPossibleWins() {
-		//bestMove = -Vector2Int.one;
+	private Vector2Int CheckPossibleWins() { // checks for a win condition for the ai
 
 		for (int i = 0; i < aiSpacesTaken.Count; i++) {
-
-			if (CheckHorizontal(aiSpacesTaken[i], ticTacToeAI.AiIcon) == 2) {
-				if (bestMove != -Vector2Int.one) {
-					return bestMove;
-				}
+			CheckDiagonals(aiSpacesTaken[i], ticTacToeAI.AiIcon);
+			if (CheckBest() != -Vector2Int.one) {
+				return bestDiagonal;
 			}
-			if (CheckVertical(aiSpacesTaken[i], ticTacToeAI.AiIcon) == 2) {
-				if (bestMove != -Vector2Int.one) {
-					return bestMove;
-				}
+			CheckHorizontal(aiSpacesTaken[i], ticTacToeAI.AiIcon);
+			if (CheckBest() != -Vector2Int.one) {
+				return bestHorizontal;
 			}
-			if (CheckDiagonals(aiSpacesTaken[i], ticTacToeAI.AiIcon) == 2) {
-				if (bestMove != -Vector2Int.one) {
-					return bestMove;
-				}
+			CheckVertical(aiSpacesTaken[i], ticTacToeAI.AiIcon);
+			if (CheckBest() != -Vector2Int.one) {
+				return bestVertical;
 			}
 		}
-		return bestMove;
+		return CheckBest(); // final catch
 	}
 	/**
-	* check all possible solutions from each space thats already taken
+	* checks all possible solutions from each space thats already taken
 	* returns the first best solution
 	**/
 	private Vector2Int CheckForPossibleBlock() { // block player
-		//bestMove = -Vector2Int.one;
 
 		for (int i = 0; i < playerSpacesTaken.Count; i++) {
 
-			if (CheckHorizontal(playerSpacesTaken[i], ticTacToeAI.playerIcon) == 2) {
-				if (bestMove != -Vector2Int.one) {
-					return bestMove;
-				}
+			CheckDiagonals(playerSpacesTaken[i], ticTacToeAI.playerIcon);
+			if (CheckBest() != -Vector2Int.one) {
+				return bestDiagonal;
 			}
-			if (CheckVertical(playerSpacesTaken[i], ticTacToeAI.playerIcon) == 2) {
-				if (bestMove != -Vector2Int.one) {
-					return bestMove;
-				}
-			}
-			if (CheckDiagonals(playerSpacesTaken[i], ticTacToeAI.playerIcon) == 2) {
-				if (bestMove != -Vector2Int.one) {
-					return bestMove;
-				}
+			CheckHorizontal(playerSpacesTaken[i], ticTacToeAI.playerIcon);
+			if (CheckBest() != -Vector2Int.one) {
+				return bestHorizontal;
+            }
+			CheckVertical(playerSpacesTaken[i], ticTacToeAI.playerIcon);
+			if (CheckBest() != -Vector2Int.one) {
+				return bestVertical;
 			}
 		}
-		return bestMove;
+		return CheckBest(); // final catch
+	}
+	private Vector2Int CheckBest() {
+		if (bestDiagonal != -Vector2Int.one) return bestDiagonal;
+		if (bestHorizontal != -Vector2Int.one) return bestHorizontal;
+		if (bestVertical != -Vector2Int.one) return bestVertical;
+		return -Vector2Int.one;
 	}
 	/**
 	* Checks all horizontal positions from the current position based on the spaces already taken
-	* Returns the count of spaces that have been taken and assigns the best move to the space that is empty from that row.
+	* Returns the the best move to the space that is empty from that row.
 	**/
-	private int CheckHorizontal(Vector2Int current, TicTacToeIcon wantIcon) {
+	private Vector2Int CheckHorizontal(Vector2Int current, TicTacToeIcon wantIcon) {
 		int spacesTaken = 0;
 		Vector2Int bestPossible = -Vector2Int.one;
 
@@ -138,14 +134,18 @@ public class HardAI : AIAlgorithm
 				bestPossible = offsetPos;
 			}
 		}
-		bestMove = bestPossible;
-		return spacesTaken;
+		if (spacesTaken == 2) {
+			bestHorizontal = bestPossible;
+			return bestHorizontal;
+		}
+		bestHorizontal = -Vector2Int.one;
+		return bestHorizontal;
 	}
 	/**
 	* Checks all vertical positions from the current position based on the spaces already taken
-	* Returns the count of spaces that have been taken and assigns the best move to the space that is empty from that column.
+	* Returns the best move to the space that is empty from that column.
 	**/
-	private int CheckVertical(Vector2Int current, TicTacToeIcon wantIcon) {
+	private Vector2Int CheckVertical(Vector2Int current, TicTacToeIcon wantIcon) {
 		int spacesTaken = 0;
 		Vector2Int bestPossible = -Vector2Int.one;
 
@@ -166,20 +166,26 @@ public class HardAI : AIAlgorithm
 				bestPossible = offsetPos;
 			}
 		}
-		bestMove = bestPossible;
-		return spacesTaken;
+		if (spacesTaken == 2) {
+			bestVertical = bestPossible;
+			return bestVertical;
+		}
+		
+		bestVertical = -Vector2Int.one;
+		return -Vector2Int.one;
 	}
 	/**
 	* Checks all diagonal positions from the current position based on the spaces already taken
-	* Returns the count of spaces that have been taken and assigns the best move to the space that is empty from that diagonal line.
+	* Returns the best move to the space that is empty from a diagonal line.
 	**/
-	private int CheckDiagonals(Vector2Int current, TicTacToeIcon wantIcon) {
+	private Vector2Int CheckDiagonals(Vector2Int current, TicTacToeIcon wantIcon) {
 		int spacesTaken = 0;
 		Vector2Int bestPossible = -Vector2Int.one;
 
 		for (int offset = -2; offset <= 2; offset++) {
-			Vector2Int offsetPosTRBL = new Vector2Int(Clamp(current.x + offset), Clamp(current.y - offset));
-			Vector2Int offsetPosTLBR = new Vector2Int(Clamp(current.x + offset), Clamp(current.y + offset));
+			// these are not clamped because they are diagonal. Clamping these offsets would cause it to check the incorrect space:
+			Vector2Int offsetPosTRBL = new Vector2Int(current.x + offset, current.y - offset);
+			Vector2Int offsetPosTLBR = new Vector2Int(current.x + offset, current.y + offset);
 
 			if (offset == 0) { // skips same current, BUT counts it as a taken space
 				spacesTaken++;
@@ -192,25 +198,41 @@ public class HardAI : AIAlgorithm
 				continue;
 			}
 			// Top-Left to Bottom-Right
-			if (ticTacToeAI.boardState[offsetPosTLBR.x, offsetPosTLBR.y] == wantIcon) { // icon exists
-				spacesTaken++;
-			}
-			else if (ticTacToeAI.boardState[offsetPosTLBR.x, offsetPosTLBR.y] == TicTacToeIcon.none) { // empty space
-				bestPossible = offsetPosTLBR;
+			/// because they are not clamped, this makes sure the offsetPos is not out of bounds of the board before checking that space
+			if (!IsOutOfBounds(offsetPosTLBR.x) && !IsOutOfBounds(offsetPosTLBR.y)) { 
+				if (ticTacToeAI.boardState[offsetPosTLBR.x, offsetPosTLBR.y] == wantIcon) { // icon exists
+					spacesTaken++;
+				}
+				else if (ticTacToeAI.boardState[offsetPosTLBR.x, offsetPosTLBR.y] == TicTacToeIcon.none) { // empty space
+					bestPossible = offsetPosTLBR;
+					continue;
+				}
 			}
 			// Top-Right to Bottom-Left
-			if (ticTacToeAI.boardState[offsetPosTRBL.x, offsetPosTRBL.y] == wantIcon) { // icon exists
-				spacesTaken++;
-			}
-			else if (ticTacToeAI.boardState[offsetPosTRBL.x, offsetPosTRBL.y] == TicTacToeIcon.none) { // empty space
-				bestPossible = offsetPosTRBL;
+			/// because they are not clamped, this makes sure the offsetPos is not out of bounds of the board before checking that space
+			if (!IsOutOfBounds(offsetPosTRBL.x) && !IsOutOfBounds(offsetPosTRBL.y)) {
+				if (ticTacToeAI.boardState[offsetPosTRBL.x, offsetPosTRBL.y] == wantIcon) { // icon exists
+					spacesTaken++;
+				}
+				else if (ticTacToeAI.boardState[offsetPosTRBL.x, offsetPosTRBL.y] == TicTacToeIcon.none) { // empty space
+					bestPossible = offsetPosTRBL;
+					continue;
+				}
 			}
 		}
-		bestMove = bestPossible;
-		return spacesTaken;
+		if (spacesTaken == 2) {
+			bestDiagonal = bestPossible;
+			return bestDiagonal;
+		}
+		bestDiagonal = -Vector2Int.one;
+		return -Vector2Int.one;
 	}
-	// Helper/Simplifier function:
+	// helper/simplifier functions:
 	private int Clamp(int value) {
 		return Mathf.Clamp(value, 0, ticTacToeAI.boardState.GetLength(0)-1);
 	}
+	private bool IsOutOfBounds(int value) {
+		int clampedValue = Clamp(value);
+		return clampedValue != value;
+    }
 }
